@@ -192,7 +192,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
               // 🚀 Upload Button
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 51,
                 child: isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : ElevatedButton(
