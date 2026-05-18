@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
 import '../../services/storage_service.dart';
 import '../../services/post_service.dart';
 
@@ -71,6 +72,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
       String mediaUrl = "";
 
+      // 📱 MOBILE
       if (!kIsWeb && selectedFile != null) {
         mediaUrl = await storage.uploadFile(
           selectedFile!,
@@ -78,10 +80,12 @@ class _AddPostScreenState extends State<AddPostScreen> {
         );
       }
 
+      // 🌐 WEB (FIXED HERE)
       if (kIsWeb && webFile != null) {
-        mediaUrl = await storage.uploadWebFile(
+        mediaUrl = await storage.uploadFileFromBytes(
           webFile!,
           mediaType == "image" ? "images" : "videos",
+          "post_${DateTime.now().millisecondsSinceEpoch}",
         );
       }
 

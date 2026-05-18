@@ -1,31 +1,62 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:developer';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StorageService {
   final SupabaseClient supabase = Supabase.instance.client;
 
-  // 📱 MOBILE UPLOAD (image/video)
+  // 📱 MOBILE ONLY (File upload)
   Future<String> uploadFile(File file, String folder) async {
-    final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+    try {
+      final fileName =
+          "${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}";
 
-    await supabase.storage.from('posts').upload(
-      '$folder/$fileName',
-      file,
-    );
+      log("uploadFile: uploading $fileName");
 
-    return supabase.storage.from('posts').getPublicUrl('$folder/$fileName');
+      await supabase.storage.from(folder).upload(
+        fileName,
+        file,
+        fileOptions: const FileOptions(upsert: true),
+      );
+
+      final url = supabase.storage.from(folder).getPublicUrl(fileName);
+
+      log("uploadFile: success $url");
+
+      return url;
+    } catch (e) {
+      log("uploadFile ERROR: $e");
+      rethrow;
+    }
   }
 
-  // 🌐 WEB UPLOAD (image/video)
-  Future<String> uploadWebFile(Uint8List bytes, String folder) async {
-    final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+  // 🌐 WEB + MOBILE SAFE (Bytes upload)
+  Future<String> uploadFileFromBytes(
+      Uint8List bytes,
+      String folder,
+      String fileName,
+      ) async {
+    try {
+      final finalName =
+          "${DateTime.now().millisecondsSinceEpoch}_$fileName";
 
-    await supabase.storage.from('posts').uploadBinary(
-      '$folder/$fileName',
-      bytes,
-    );
+      log("uploadFileFromBytes: uploading $finalName");
 
-    return supabase.storage.from('posts').getPublicUrl('$folder/$fileName');
+      await supabase.storage.from(folder).uploadBinary(
+        finalName,
+        bytes,
+        fileOptions: const FileOptions(upsert: true),
+      );
+
+      final url = supabase.storage.from(folder).getPublicUrl(finalName);
+
+      log("uploadFileFromBytes: success $url");
+
+      return url;
+    } catch (e) {
+      log("uploadFileFromBytes ERROR: $e");
+      rethrow;
+    }
   }
 }

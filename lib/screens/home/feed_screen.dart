@@ -21,14 +21,13 @@ class _FeedScreenState extends State<FeedScreen> {
   List<Map<String, dynamic>> posts = [];
   bool isLoading = true;
 
-  // 🔥 Active visible post index for auto pause/play
+  // 🔥 active visible video index
   int activeIndex = 0;
 
-  // ❤️ Likes
+  // ❤️ likes
   Map<String, bool> likedPosts = {};
   Map<String, int> likeCounts = {};
 
-  // 💬 Comment controller
   final TextEditingController commentController =
   TextEditingController();
 
@@ -81,7 +80,7 @@ class _FeedScreenState extends State<FeedScreen> {
     setState(() {});
   }
 
-  // 💬 Open comments
+  // 💬 Comments Bottom Sheet
   void openComments(String postId) async {
     final comments =
     await commentService.getComments(postId);
@@ -112,7 +111,7 @@ class _FeedScreenState extends State<FeedScreen> {
 
                 const SizedBox(height: 10),
 
-                // 📥 Comments list
+                // 📥 Comments List
                 Expanded(
                   child: ListView.builder(
                     itemCount: comments.length,
@@ -181,6 +180,27 @@ class _FeedScreenState extends State<FeedScreen> {
     );
   }
 
+  // 🔥 Header
+  Widget header() {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      child: const Row(
+        mainAxisAlignment:
+        MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Snap Flow",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Icon(Icons.send),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -189,118 +209,160 @@ class _FeedScreenState extends State<FeedScreen> {
       );
     }
 
-    // 🔥 IMPORTANT:
-    // Use PageView for proper auto pause
-    return PageView.builder(
-      scrollDirection: Axis.vertical,
-      itemCount: posts.length,
+    return Scaffold(
+      backgroundColor: Colors.white,
 
-      // 🔥 Detect current visible post
-      onPageChanged: (index) {
-        setState(() {
-          activeIndex = index;
-        });
-      },
+      body: Column(
+        children: [
+          // 🔥 Top Header
+          header(),
 
-      itemBuilder: (context, index) {
-        final post = posts[index];
-        final postId = post['id'];
+          // 🔥 Feed List
+          Expanded(
+            child: PageView.builder(
+              scrollDirection: Axis.vertical,
+              itemCount: posts.length,
 
-        return Container(
-          color: Colors.white,
-          child: Column(
-            crossAxisAlignment:
-            CrossAxisAlignment.start,
-            children: [
-              // 👤 Header
-              ListTile(
-                leading: const CircleAvatar(),
-                title: Text(
-                  post['user_id'] ?? "user",
-                ),
-                trailing:
-                const Icon(Icons.more_horiz),
-              ),
+              onPageChanged: (index) {
+                setState(() {
+                  activeIndex = index;
+                });
+              },
 
-              // 🎥 Video / 🖼 Image
-              post['media_type'] == "video"
-                  ? SizedBox(
-                height: 300,
-                child: VideoBox(
-                  url: post['image_url'],
-                  // 🔥 ONLY active video plays
-                  play:
-                  index == activeIndex,
-                ),
-              )
-                  : Image.network(
-                post['image_url'],
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+              itemBuilder: (context, index) {
+                final post = posts[index];
+                final postId = post['id'];
 
-              const SizedBox(height: 10),
+                return SingleChildScrollView(
+                  child: Container(
+                    margin:
+                    const EdgeInsets.only(bottom: 15),
+                    color: Colors.white,
+                    child: Column(
+                      crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                      children: [
+                        // 👤 User Header
+                        ListTile(
+                          leading:
+                          const CircleAvatar(),
+                          title: Text(
+                            post['user_id'] ??
+                                "user",
+                          ),
+                          trailing: const Icon(
+                            Icons.more_horiz,
+                          ),
+                        ),
 
-              // ❤️ Actions
-              Padding(
-                padding:
-                const EdgeInsets.symmetric(
-                  horizontal: 10,
-                ),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () =>
-                          toggleLike(postId),
-                      child: Icon(
-                        likedPosts[postId] ==
-                            true
-                            ? Icons.favorite
-                            : Icons
-                            .favorite_border,
-                        color: Colors.red,
-                      ),
+                        // 🎥 VIDEO / 🖼 IMAGE
+                        post['media_type'] ==
+                            "video"
+                            ? SizedBox(
+                          height: 400,
+                          width:
+                          double.infinity,
+                          child: AspectRatio(
+                            aspectRatio:
+                            9 / 16,
+                            child: VideoBox(
+                              url: post[
+                              'image_url'],
+                              play: index ==
+                                  activeIndex,
+                            ),
+                          ),
+                        )
+                            : SizedBox(
+                          height: 400,
+                          width:
+                          double.infinity,
+                          child: Image.network(
+                            post[
+                            'image_url'],
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        // ❤️ Actions
+                        Padding(
+                          padding:
+                          const EdgeInsets.symmetric(
+                            horizontal: 10,
+                          ),
+                          child: Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () =>
+                                    toggleLike(
+                                        postId),
+                                child: Icon(
+                                  likedPosts[
+                                  postId] ==
+                                      true
+                                      ? Icons
+                                      .favorite
+                                      : Icons
+                                      .favorite_border,
+                                  color:
+                                  Colors.red,
+                                ),
+                              ),
+
+                              const SizedBox(
+                                  width: 15),
+
+                              GestureDetector(
+                                onTap: () =>
+                                    openComments(
+                                        postId),
+                                child:
+                                const Icon(
+                                  Icons.comment,
+                                ),
+                              ),
+
+                              const SizedBox(
+                                  width: 15),
+
+                              const Icon(
+                                  Icons.send),
+
+                              const Spacer(),
+
+                              Text(
+                                "${likeCounts[postId] ?? 0} likes",
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        // 📝 Caption
+                        Padding(
+                          padding:
+                          const EdgeInsets.symmetric(
+                            horizontal: 10,
+                          ),
+                          child: Text(
+                            post['caption'] ??
+                                "",
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+                      ],
                     ),
-
-                    const SizedBox(width: 15),
-
-                    GestureDetector(
-                      onTap: () =>
-                          openComments(postId),
-                      child: const Icon(
-                        Icons.comment,
-                      ),
-                    ),
-
-                    const SizedBox(width: 15),
-
-                    const Icon(Icons.send),
-
-                    const Spacer(),
-
-                    Text(
-                      "${likeCounts[postId] ?? 0} likes",
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // 📝 Caption
-              Padding(
-                padding:
-                const EdgeInsets.symmetric(
-                  horizontal: 10,
-                ),
-                child: Text(
-                  post['caption'] ?? "",
-                ),
-              ),
-            ],
+                  ),
+                );
+              },
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
